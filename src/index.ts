@@ -3,10 +3,24 @@ import { importSchema } from 'graphql-import'
 import { Prisma } from './generated/prisma'
 import { Context } from './utils'
 
+// (root, args, context, info)
 const resolvers = {
   Query: {
+    user(_, { username }, context: Context, info){
+      return context.db.query.user({ 
+        where: { username } 
+      }, info)
+    }
   },
   Mutation: {
+    signup(parent, { username }, context: Context, info) {
+      const data = {
+        username,
+        stellarAccount: '1234',
+        stellarSeed: '1234'
+      }
+      return context.db.mutation.createUser({ data }, info)
+    }
   },
 }
 
