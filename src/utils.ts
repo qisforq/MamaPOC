@@ -4,3 +4,4 @@ export interface Context {
   db: Prisma
   request: any
 }
+export const ENVCryptoSecret = 'MamaTestnetSecret-for-poc-only'
