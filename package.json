@@ -7,9 +7,13 @@
     "playground": "graphql playground"
   },
   "dependencies": {
+    "@types/crypto-js": "^3.1.43",
+    "@types/stellar-sdk": "^0.8.6",
+    "crypto-js": "^3.1.9-1",
     "graphql-import": "0.7.1",
     "graphql-yoga": "1.16.2",
-    "prisma-binding": "2.1.6"
+    "prisma-binding": "2.1.6",
+    "stellar-sdk": "^0.11.0"
   },
   "devDependencies": {
     "graphql-cli": "2.16.7",
