@@ -39,7 +39,7 @@ const resolvers = {
 
       const user = await context.db.mutation.createUser({ data }, info)
 
-      // In a production app, you don't want to block to do this operation or have the keys to create accounts in this same app. Use something like AWS lambda, or a separate system to provision the Stellar account.
+      // In production, you don't want to block to do this operation or have the keys to create accounts in this same app. Use something like AWS lambda, or a separate system to provision the Stellar account.
 
       try {
         // Tell the Stellar SDK you are using the testnet
@@ -59,7 +59,7 @@ const resolvers = {
           .addOperation(
             Operation.createAccount({
               destination: keypair.publicKey(),
-              startingBalance: '2'
+              startingBalance: '1034'
             })
           ).build()
 
@@ -68,15 +68,66 @@ const resolvers = {
           
           // Submit transaction to the server
           const result = await stellarServer.submitTransaction(transaction)
-          console.log('Account created: ' + result)
+          console.log('Account created! -> ' + JSON.stringify(result, null, 3))
       } catch (e) {
-        console.log('Stellar account note created.', e)
+        console.log('Stellar account not created.', e)
       }
-
       return user
     },
 
+    // In production don't rely on the API to send you the sender's username. It should be based on the Auth/session token.
+    async makePayment(_, {amount, senderUsername, recipientUsername, memo }, context: Context, info) {
+      const result = await context.db.query.users({
+        where: {
+          username_in: [senderUsername, recipientUsername]
+        }
+      })
 
+      const [recipient, sender] = result
+      // ^^ an array with the sender and recipient's info (id, username, stellar account info) in object form 
+      // NOTE: Recipient info comes first for some reason.
+      
+      Network.useTestNetwork()
+      const stellarServer = new Server('https://horizon-testnet.stellar.org')
+
+      const signerKeys = Keypair.fromSecret(
+        // In production, use something like KMS
+        AES.decrypt(sender.stellarSeed, ENVCryptoSecret).toString(enc.Utf8)
+      )
+      
+      const account = await stellarServer.loadAccount(sender.stellarAccount)
+      
+      // check balance of account:
+      console.log('Balances for sender account: ', sender.stellarAccount);
+      account.balances.forEach((balance) => console.log('Type:', balance.asset_type, ', Balance:', balance.balance))
+      
+      // use stellar's native lumens for now
+      const asset = Asset.native()
+
+      let tx = new TransactionBuilder(account)
+      .addOperation(
+        Operation.payment({
+          destination: recipient.stellarAccount,
+          asset,
+          amount
+        })
+      ).addMemo(Memo.text('This is a memo!'))
+      .build()
+
+      tx.sign(signerKeys)
+
+      try {
+        const { hash } = await stellarServer.submitTransaction(tx)
+
+        return { id: hash }
+      } catch (err) {
+        console.error('ERROR: ')
+        console.log(`extras.result_codes:`)
+        console.log(err.response.data.extras.result_codes)
+        
+        throw err
+      }
+    }
   },
 }
 
