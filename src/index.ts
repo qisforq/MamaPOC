@@ -1,9 +1,5 @@
 import { GraphQLServer } from 'graphql-yoga'
-import { importSchema } from 'graphql-import'
 import { Prisma } from './generated/prisma'
-import { Context } from './utils'
-
-import { AES, enc } from 'crypto-js'
 import { 
   Asset,
   Memo,
@@ -14,7 +10,7 @@ import {
   Operation // Operation helps you represent/build operations in Stellar network.
 } from 'stellar-sdk'
 // import schema from './schema/'
-import { ENVCryptoSecret, resolvers } from './resolvers'
+import { resolvers } from './resolvers'
       
 const server = new GraphQLServer({
   typeDefs: './src/schema.graphql',

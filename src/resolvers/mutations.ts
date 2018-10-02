@@ -95,6 +95,9 @@ export async function makePayment(_, {amount, senderUsername, recipientUsername,
   // use stellar's native lumens for now
   const asset = Asset.native()
 
+  // check if there's a memo
+  memo = memo || ''
+
   let tx = new TransactionBuilder(account)
   .addOperation(
     Operation.payment({
@@ -102,15 +105,17 @@ export async function makePayment(_, {amount, senderUsername, recipientUsername,
       asset,
       amount
     })
-  ).addMemo(Memo.text('This is a memo!'))
+  )
+  .addMemo(Memo.text(memo))
   .build()
 
   tx.sign(signerKeys)
 
   try {
     const { hash } = await stellarServer.submitTransaction(tx)
-
-    return { id: hash }
+    console.log("Payment successfully made!", hash);
+    
+    return { id: hash, memo: memo || null }
   } catch (err) {
     console.error('ERROR: ')
     console.log(`extras.result_codes:`)
