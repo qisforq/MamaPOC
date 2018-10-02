@@ -5,8 +5,8 @@ type Query {
 }
 
 type Mutation {
-  signup(username: String!): User!
-  payment(amount: String!, sendUsername: String!, recipientUsername: String!, memo: String): Transaction
+  signupUser(username: String!): User!
+  makePayment(amount: String!, sendUsername: String!, recipientUsername: String!, memo: String): Transaction
 }
 
 type Transaction {

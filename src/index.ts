@@ -27,7 +27,7 @@ const resolvers = {
     }
   },
   Mutation: {
-    async signup(_, { username }, context: Context, info) {
+    async signupUser(_, { username }, context: Context, info) {
       const keypair = Keypair.random()
       const secret = AES.encrypt(keypair.secret(), ENVCryptoSecret).toString()
       console.log("secret: ", keypair.secret(), "secret+AES: ", secret)
@@ -53,7 +53,7 @@ const resolvers = {
          // Load account from Stellar
         const provisioner = await stellarServer.loadAccount(provisionerKeyPair.publicKey())
 
-        console.log('creating account in ledger', keypair.publicKey())
+        console.log('Creating new account in ledger with public key: ', keypair.publicKey())
 
         const transaction = new TransactionBuilder(provisioner)
           .addOperation(
@@ -75,6 +75,8 @@ const resolvers = {
 
       return user
     },
+
+
   },
 }
 
