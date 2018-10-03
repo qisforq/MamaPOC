@@ -18,7 +18,6 @@ import {
 export async function signupUser(_, { username }, context: Context, info) {
   const keypair = Keypair.random()
   const secret = AES.encrypt(keypair.secret(), ENVCryptoSecret).toString()
-  console.log("secret: ", keypair.secret(), "secret+AES: ", secret)
   const data = {
     username,
     stellarAccount: keypair.publicKey(),
@@ -36,23 +35,23 @@ export async function signupUser(_, { username }, context: Context, info) {
     const stellarServer = new Server('https://horizon-testnet.stellar.org')
 
     // In poduction, don't put values like the account seed in code
-    const provisionerKeyPair = Keypair.fromSecret('SA72TGXRHE26WC5G5MTNURFUFBHZHTIQKF5AQWRXJMJGZUF4XY6HFWJ4')
+    const funderKeypair = Keypair.fromSecret('SA72TGXRHE26WC5G5MTNURFUFBHZHTIQKF5AQWRXJMJGZUF4XY6HFWJ4')
 
       // Load account from Stellar
-    const provisioner = await stellarServer.loadAccount(provisionerKeyPair.publicKey())
+    const funder = await stellarServer.loadAccount(funderKeypair.publicKey())
 
     console.log('Creating new account in ledger with public key: ', keypair.publicKey())
 
-    const transaction = new TransactionBuilder(provisioner)
+    const transaction = new TransactionBuilder(funder)
       .addOperation(
         Operation.createAccount({
           destination: keypair.publicKey(),
-          startingBalance: '1034'
+          startingBalance: '1000'
         })
       ).build()
 
       // Sign the transaction above
-      transaction.sign(provisionerKeyPair)
+      transaction.sign(funderKeypair)
       
       // Submit transaction to the server
       const result = await stellarServer.submitTransaction(transaction)

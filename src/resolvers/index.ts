@@ -12,7 +12,7 @@ import {
 } from 'stellar-sdk'
 // import schema from './schema/'
 
-import { user } from './queries'
+import { user, info, users } from './queries';
 import { signupUser, makePayment } from './mutations'
 
 export const ENVCryptoSecret = 'MamaTestnetSecret-for-poc-only'
@@ -20,7 +20,9 @@ export const ENVCryptoSecret = 'MamaTestnetSecret-for-poc-only'
 // (root, args, context, info)  
   export const resolvers = {
     Query: {
-      user
+      info,
+      user,
+      users
     },
     Mutation: {
       signupUser,
