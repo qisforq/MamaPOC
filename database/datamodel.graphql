@@ -4,3 +4,5 @@ type User {
   stellarAccount: String!
   stellarSeed: String!
 }
+
+# TODO: add accountBalance field

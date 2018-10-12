@@ -1,15 +1,17 @@
 import { GraphQLServer } from 'graphql-yoga'
-import { importSchema } from 'graphql-import'
 import { Prisma } from './generated/prisma'
-import { Context } from './utils'
-
-const resolvers = {
-  Query: {
-  },
-  Mutation: {
-  },
-}
-
+import { 
+  Asset,
+  Memo,
+  Keypair, // Keypair represents public and secret keys.
+  Network, // Network provides helper methods to get the passphrase or id for different stellar networks.
+  Server,  // Server handles the network connections.
+  TransactionBuilder, // Helps you construct transactions.
+  Operation // Operation helps you represent/build operations in Stellar network.
+} from 'stellar-sdk'
+// import schema from './schema/'
+import { resolvers } from './resolvers'
+      
 const server = new GraphQLServer({
   typeDefs: './src/schema.graphql',
   resolvers,
