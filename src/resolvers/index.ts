@@ -15,8 +15,6 @@ import {
 import { user, info, users } from './queries';
 import { signupUser, makePayment } from './mutations'
 
-export const ENVCryptoSecret = 'MamaTestnetSecret-for-poc-only'
-  
 // (root, args, context, info)  
   export const resolvers = {
     Query: {

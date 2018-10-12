@@ -1,5 +1,11 @@
-import { Context } from '../utils'
-import { ENVCryptoSecret } from './index'
+import {
+  Context,
+  allowTrust,
+  createAccountInLedger,
+  createTrustline,
+  promoPayment,
+  ENVCryptoSecret
+} from '../utils'
 
 import { AES, enc } from 'crypto-js'
 import { 
@@ -16,11 +22,11 @@ import {
 
 // SIGNUP USER MUTATION:
 export async function signupUser(_, { username }, context: Context, info) {
-  const keypair = Keypair.random()
-  const secret = AES.encrypt(keypair.secret(), ENVCryptoSecret).toString()
+  const userKeypair = Keypair.random()
+  const secret = AES.encrypt(userKeypair.secret(), ENVCryptoSecret).toString()
   const data = {
     username,
-    stellarAccount: keypair.publicKey(),
+    stellarAccount: userKeypair.publicKey(),
     stellarSeed: secret
   }
 
@@ -28,37 +34,10 @@ export async function signupUser(_, { username }, context: Context, info) {
 
   // In production, you don't want to block to do this operation or have the keys to create accounts in this same app. Use something like AWS lambda, or a separate system to provision the Stellar account.
 
-  try {
-    // Tell the Stellar SDK you are using the testnet
-    Network.useTestNetwork()
-    // point to testnet host
-    const stellarServer = new Server('https://horizon-testnet.stellar.org')
-
-    // In poduction, don't put values like the account seed in code
-    const funderKeypair = Keypair.fromSecret('SA72TGXRHE26WC5G5MTNURFUFBHZHTIQKF5AQWRXJMJGZUF4XY6HFWJ4')
-
-      // Load account from Stellar
-    const funder = await stellarServer.loadAccount(funderKeypair.publicKey())
-
-    console.log('Creating new account in ledger with public key: ', keypair.publicKey())
-
-    const transaction = new TransactionBuilder(funder)
-      .addOperation(
-        Operation.createAccount({
-          destination: keypair.publicKey(),
-          startingBalance: '1000'
-        })
-      ).build()
-
-      // Sign the transaction above
-      transaction.sign(funderKeypair)
-      
-      // Submit transaction to the server
-      const result = await stellarServer.submitTransaction(transaction)
-      console.log('Account created! -> ' + JSON.stringify(result, null, 3))
-  } catch (e) {
-    console.log('Stellar account not created.', e)
-  }
+  await createAccountInLedger(userKeypair.publicKey())
+  await createTrustline(userKeypair)
+  await allowTrust(userKeypair.publicKey())
+  await promoPayment(userKeypair.publicKey(),'50')
   return user
 }
 
