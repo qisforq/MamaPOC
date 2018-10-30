@@ -3,8 +3,9 @@ import {
   allowTrust,
   createAccountInLedger,
   createTrustline,
-  promoPayment,
-  ENVCryptoSecret
+  payment,
+  ENVCryptoSecret,
+  mamaUSDBankKeypair
 } from '../utils'
 
 import { AES, enc } from 'crypto-js'
@@ -37,7 +38,7 @@ export async function signupUser(_, { username }, context: Context, info) {
   await createAccountInLedger(userKeypair.publicKey())
   await createTrustline(userKeypair)
   await allowTrust(userKeypair.publicKey())
-  await promoPayment(userKeypair.publicKey(),'50')
+  await payment(mamaUSDBankKeypair, userKeypair.publicKey(),'50', `Here's $50 MamaUSD as a gift`)
   return user
 }
 
@@ -52,45 +53,21 @@ export async function makePayment(_, {amount, senderUsername, recipientUsername,
     }
   })
 
-  const [recipient, sender] = result
+  // const [recipient, sender] = result
   // ^^ an array with the sender and recipient's info (id, username, stellar account info) in object form 
   // NOTE: Recipient info comes first for some reason.
-  
-  Network.useTestNetwork()
-  const stellarServer = new Server('https://horizon-testnet.stellar.org')
+  // NOTE: THIS might not be true!! Use code below instead:
+  // TODO: test this and implement:
+  const sender = result.find((el)=> el.username === senderUsername)
+  const recipient = result.find((el)=> el.username === recipientUsername)
 
   const signerKeys = Keypair.fromSecret(
     // In production, use something like KMS
     AES.decrypt(sender.stellarSeed, ENVCryptoSecret).toString(enc.Utf8)
   )
   
-  const account = await stellarServer.loadAccount(sender.stellarAccount)
-  
-  // check balance of account:
-  console.log('Balances for sender account: ', sender.stellarAccount);
-  account.balances.forEach((balance) => console.log('Type:', balance.asset_type, ', Balance:', balance.balance))
-  
-  // use stellar's native lumens for now
-  const asset = Asset.native()
-
-  // check if there's a memo
-  memo = memo || ''
-
-  let tx = new TransactionBuilder(account)
-  .addOperation(
-    Operation.payment({
-      destination: recipient.stellarAccount,
-      asset,
-      amount
-    })
-  )
-  .addMemo(Memo.text(memo))
-  .build()
-
-  tx.sign(signerKeys)
-
   try {
-    const { hash } = await stellarServer.submitTransaction(tx)
+    const { hash } = await payment(signerKeys, recipient.stellarAccount, amount, memo)
     console.log("Payment successfully made!", hash);
     
     return { id: hash, memo: memo || null }
