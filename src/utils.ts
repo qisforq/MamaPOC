@@ -25,7 +25,7 @@ export const MamaUSD = new Asset(
 )
 
 // In production, do not store secret keys like these in code. Use something like KMS and put these secrets somewhere very safe.
-const mamaUSDBankKeypair = Keypair.fromSecret('SAS2GZXWDU2TXHXQREV3OJHIY7SC54553UB54WHOOCTA3GJB47VBOXYE')
+export const mamaUSDBankKeypair = Keypair.fromSecret('SAS2GZXWDU2TXHXQREV3OJHIY7SC54553UB54WHOOCTA3GJB47VBOXYE')
 // ^^ this is MamaUSD-bank's  key, which has been authorized as a signer for the MamaUSD account (see Lumen CLI notes)
 
 
@@ -126,11 +126,18 @@ export async function allowTrust(trustor: string) {
 
 }
 
-export async function promoPayment(destination: string, amount: string) {
+export async function payment(senderKeys: Keypair, destination: string, amount: string, memo?: string) {
   Network.useTestNetwork()
   const stellarServer = new Server('https://horizon-testnet.stellar.org')
 
-  const account = await stellarServer.loadAccount(mamaUSDBankKeypair.publicKey())
+  const account = await stellarServer.loadAccount(senderKeys.publicKey())
+
+  // check balance of account:
+  console.log('Balances for sender account: ', senderKeys.publicKey());
+  account.balances.forEach((balance) => console.log('Type:', balance.asset_type, ', Balance:', balance.balance))
+
+  // check if there's a memo
+  memo = memo || ''
 
   let transaction = new TransactionBuilder(account)
   .addOperation(
@@ -140,14 +147,17 @@ export async function promoPayment(destination: string, amount: string) {
       amount,
     })
   )
-  .addMemo(Memo.text(`Here's $50 MamaUSD as a gift`))
+  .addMemo(Memo.text(memo))
   .build()
 
-  transaction.sign(mamaUSDBankKeypair)
+  transaction.sign(senderKeys)
 
+  console.log(`sending ${amount} from ${senderKeys.publicKey()} to ${destination} `)
+  
   try {
     const result = await stellarServer.submitTransaction(transaction)
-    console.log(`50 Mama dollars added to your account. You're welcome. -> `, JSON.stringify(result, null, 3))
+    console.log('Transaction Successful! -> ', JSON.stringify(result, null, 3))
+    console.log('Transaction Successful! Payment successfully made! Hash for transaction -> ', result.hash)
     
     return result
   } catch (err) {
