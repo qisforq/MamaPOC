@@ -10,6 +10,7 @@ type Mutation {
   signupUser(username: String!): User!
   makePayment(amount: String!, senderUsername: String!, recipientUsername: String!, memo: String): Transaction
   creditUser(amount: String!, username: String!): Transaction
+  debitUser(amount: String!, username: String!): Transaction
 }
 
 type Transaction {

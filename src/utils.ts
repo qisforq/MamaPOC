@@ -27,7 +27,7 @@ export const MamaUSD = new Asset(
 // In production, do not store secret keys like these in code. Use something like KMS and put these secrets somewhere very safe.
 export const mamaUSDBankKeypair = Keypair.fromSecret('SAS2GZXWDU2TXHXQREV3OJHIY7SC54553UB54WHOOCTA3GJB47VBOXYE')
 // ^^ this is MamaUSD-bank's  key, which has been authorized as a signer for the MamaUSD account (see Lumen CLI notes)
-
+export const mamaUSDKeyIssuerPubKey = 'GCQO3EHXPCXDWNACFEASX3QTW4H7T2X6PJ57TH7OOPFUHGSGDGIZKJP4'
 
 export async function createAccountInLedger(newAcctPubKey: string) {
   try {
@@ -98,7 +98,9 @@ export async function allowTrust(trustor: string) {
 
     const mamaUSDBank = await stellarServer.loadAccount(mamaUSDBankKeypair.publicKey())
 
-    const mamaUSDKeyIssuerPubKey = 'GCQO3EHXPCXDWNACFEASX3QTW4H7T2X6PJ57TH7OOPFUHGSGDGIZKJP4'
+
+    // const mamaUSDKeyIssuerPubKey = 'GCQO3EHXPCXDWNACFEASX3QTW4H7T2X6PJ57TH7OOPFUHGSGDGIZKJP4'
+    // ^^ Moved to global scope and exported
 
     let transaction = new TransactionBuilder(mamaUSDBank)
     // const transaction = new TransactionBuilder(mamaUSDIssuer)

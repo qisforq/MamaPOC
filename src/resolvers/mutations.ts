@@ -5,7 +5,8 @@ import {
   createTrustline,
   payment,
   ENVCryptoSecret,
-  mamaUSDBankKeypair
+  mamaUSDBankKeypair,
+  mamaUSDKeyIssuerPubKey,
 } from '../utils'
 
 import { AES, enc } from 'crypto-js'
@@ -80,7 +81,7 @@ export async function makePayment(_, {amount, senderUsername, recipientUsername,
   }
 }
 
-// CREDIT MUTATION - for issuing more USD to a user
+// CREDIT MUTATION - for issuing more USD to a user, like if they deposit more money from their credit card
 export async function creditUser(_, { amount, username }, context: Context, info) {
   const user = await context.db.query.user({
     where: {
@@ -90,6 +91,29 @@ export async function creditUser(_, { amount, username }, context: Context, info
 
   try {
     const { hash } = await payment(mamaUSDBankKeypair, user.stellarAccount, amount)
+    return { id: hash }
+  } catch (err) {
+    console.error('ERROR: ')
+    console.log(`extras.result_codes:`)
+    console.log(err.response.data.extras.result_codes)
+  }
+}
+
+// DEBIT MUTATION - for debiting USD from a use, like if they withdraw money back into their bank account
+export async function debitUser(_, { amount, username }, context: Context, info){
+  const user = await context.db.query.user({
+    where: {
+      username,
+    }
+  })
+
+  const keypair = Keypair.fromSecret(AES.decrypt(user.stellarSeed, ENVCryptoSecret).toString(enc.Utf8))
+
+  try {
+    const { hash } = await payment(keypair, mamaUSDKeyIssuerPubKey, amount)
+
+    console.log(`account ${keypair.publicKey()} debited - ${username} should receive $${amount} USD in their bank account in 2-3 trillion days. Beep boop. Zorpazorp.`)
+
     return { id: hash }
   } catch (err) {
     console.error('ERROR: ')
