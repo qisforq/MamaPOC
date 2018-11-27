@@ -79,3 +79,21 @@ export async function makePayment(_, {amount, senderUsername, recipientUsername,
     throw err
   }
 }
+
+// CREDIT MUTATION - for issuing more USD to a user
+export async function creditUser(_, { amount, username }, context: Context, info) {
+  const user = await context.db.query.user({
+    where: {
+      username
+    }
+  })
+
+  try {
+    const { hash } = await payment(mamaUSDBankKeypair, user.stellarAccount, amount)
+    return { id: hash }
+  } catch (err) {
+    console.error('ERROR: ')
+    console.log(`extras.result_codes:`)
+    console.log(err.response.data.extras.result_codes)
+  }
+}

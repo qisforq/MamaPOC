@@ -13,7 +13,7 @@ import {
 // import schema from './schema/'
 
 import { user, info, users } from './queries';
-import { signupUser, makePayment } from './mutations'
+import { signupUser, makePayment, creditUser } from './mutations'
 
 // (root, args, context, info)  
   export const resolvers = {
@@ -24,6 +24,7 @@ import { signupUser, makePayment } from './mutations'
     },
     Mutation: {
       signupUser,
-      makePayment
+      makePayment,
+      creditUser,
     },
   }
